@@ -82,7 +82,7 @@ var forceResetOnVerBelow = 3.5;
 if(window.self !== window.top) {
     throw "";
 }
-var current_Gateway = _select_Gateway(); 
+var current_Gateway = _select_Gateway();
 // Set global console variables
 var fouxConsole = {
     log: function() {},
@@ -91,22 +91,25 @@ var fouxConsole = {
     warn: function() {}
 
 };
-var console = unsafeWindow.console || fouxConsole;
+//var console = unsafeWindow.console || fouxConsole;
+var console = unsafeWindow.console;
+var log_backup = console.log;
+var debug_backup = console.debug;
 var chardiamonds = [];
-var zaxdiamonds = 0;
+var zexdiamonds = 0;
 var chargold = [];
 var definedTask = {};
 var translation = {};
 var failedTasksList = [];
 var failedProfiles = {};
-var collectTaskAttempts = new Array(9); var k = 9; while (k) {collectTaskAttempts[--k] = 0};    //collectTaskAttempts.fill(0); js6 
-var antiInfLoopTrap = {// without this script sometimes try to start the same task in infinite loop (lags?) 
+var collectTaskAttempts = new Array(9); var k = 9; while (k) {collectTaskAttempts[--k] = 0};    //collectTaskAttempts.fill(0); js6
+var antiInfLoopTrap = {// without this script sometimes try to start the same task in infinite loop (lags?)
     prevCharName: "unknown", // character name which recently launched a task
     prevTaskName: "unknown", // name of the task previously launched
-    startCounter: 0, // how many times the same character starts the same task 
+    startCounter: 0, // how many times the same character starts the same task
     currCharName: "unknown", // character name which try to launch new task
     currTaskName: "unknown", // name of the new task to launch
-    trapActivation: 15 // number of repetition to activation trap 
+    trapActivation: 15 // number of repetition to activation trap
 };
 var pleaseBuy = [];
 // Page Reloading function
@@ -169,7 +172,7 @@ function _select_Gateway() { // Check for Gateway used to
                     //$('a.nav-dungeons').trigger('click'); window.setTimeout(function(){ $('a.nav-inventory').trigger('click'); },2000);
                 }
             } catch (e) {
-                console.log("ERROR: Did not succeed to add open all tooltip.");
+                console.error("ERROR: Did not succeed to add open all tooltip.", e);
             }
     });
 
@@ -194,7 +197,8 @@ function _select_Gateway() { // Check for Gateway used to
     var state_loading_time = 30; // default of 30 seconds
     var state_idle = 0; // If the page is idle for longer than 60 seconds, reload page (maybe a javascript error)
     var state_idle_time = 120; // default of 120 seconds
-    var reload_hours = [2, 5, 8, 11, 14, 17, 20, 23]; // logout and reload every three hours - 2:29 - 5:29 - 8:29 - 11:29 - 14:29 - 17:29 - 20:29 - 23:29
+    var reload_hours = [9, 12, 15, 17, 20, 22, 1, 4, 6]; // logout and reload every three hours - 2:29 - 5:29 - 8:29 - 11:29 - 14:29 - 17:29 - 20:29 - 23:29
+    var reload_minute = 17;
     var last_location = ""; // variable to track reference to page URL
     var reload_timer = setInterval(function() {
         if (!s_paused) {
@@ -207,8 +211,8 @@ function _select_Gateway() { // Check for Gateway used to
                 var loading_sec = Number(loading_date.getSeconds());
                 var loading_min = Number(loading_date.getMinutes());
                 var loading_hour = Number(loading_date.getHours());
-                if (reload_hours.indexOf(loading_hour) >= 0 && loading_min == 29 && loading_sec < 2) {
-                    console.log("Auto Reload");
+                if (reload_hours.indexOf(loading_hour) >= 0 && loading_min == reload_minute && loading_sec < 2) {
+                    console.info("Auto Reload at scheduled time: %s:%s", loading_hour, loading_min);
                     unsafeWindow.location.href = current_Gateway;
                     return;
                 }
@@ -216,7 +220,7 @@ function _select_Gateway() { // Check for Gateway used to
 
             // check for errors
             if ($("title").text().match(/Error/) || $("div.modal-content h3").text().match(/Disconnected/)) {
-                console.log("Error detected - relogging");
+                console.error("Error detected - relogging: " + $("title").text());
                 unsafeWindow.location.href = current_Gateway;
                 return;
             }
@@ -225,7 +229,7 @@ function _select_Gateway() { // Check for Gateway used to
                 last_location = location.href;
                 state_idle = 0;
                 if (state_loading >= state_loading_time) {
-                    console.log("Page Loading too long");
+                    console.warn("Page Loading too long");
                     state_loading = 0;
                     location.reload();
                 } else {
@@ -310,9 +314,9 @@ function _select_Gateway() { // Check for Gateway used to
 
     // Forcing settings clear !
     var ver = parseFloat(GM_getValue("script_version", 0));
-    
+
     if ((ver < forceResetOnVerBelow) && forceSettingsResetOnUpgrade) {
-        var str = "Detected an upgrade from old version or fresh install.<br />Procceding will wipe all saved settings.<br />Please set characters to active after log in.";  
+        var str = "Detected an upgrade from old version or fresh install.<br />Procceding will wipe all saved settings.<br />Please set characters to active after log in.";
         $('<div id="dialog-confirm" title="Setting wipe confirm">' + str + '</div>').dialog({
               resizable: true,
               width: 500,
@@ -336,7 +340,7 @@ function _select_Gateway() { // Check for Gateway used to
                   $( this ).dialog( "close" );
                 }
               }
-            });        
+            });
         return;
     }
 
@@ -355,13 +359,13 @@ function addProfile(profession, profile, base){
         profiles: []
     };
 
-    
 
-    //creating new profession or using existing one 
+
+    //creating new profession or using existing one
     var professionSet = (typeof profession === 'object')
         ? jQuery.extend(true, professionBase, profession)
         : definedTask[profession] || professionBase;
-    
+
     if(!professionSet) {return;}
     if(!definedTask[profession]) {definedTask[profession] = professionSet;}
     if(!profile) {return;}
@@ -372,7 +376,7 @@ function addProfile(profession, profile, base){
         isProfileActive: true,
         level: {}
     };
-    
+
     //getting new profile formated
     var newProfile = jQuery.extend(true, profileBase, profile),
         baseProfile;
@@ -382,19 +386,19 @@ function addProfile(profession, profile, base){
         var existing = professionSet.profiles.filter(function(e) {return e.profileName === base;});
         if(existing && existing.length) {baseProfile = existing[0];}
       }
-    
+
 
     //setting levels
     var baseLevels = baseProfile ? baseProfile.level : [],
         rec = 0;
     for(var i = 0; i <= maxLevel; i++) {
       //recur has priority
-      if (rec > 0 ){ 
+      if (rec > 0 ){
         rec -=1;
         //setting empty array to handle later by fallback
         newProfile.level[i] = newProfile.level[i] || [];
       }
-      
+
       if(newProfile.level && newProfile.level[i]){
             //override for arrays
             if (Array.isArray(newProfile.level[i]) && newProfile.level[i].length){
@@ -408,11 +412,11 @@ function addProfile(profession, profile, base){
                 def = def.concat(baseLevels[i] || [], tail || []);
                 newProfile.level[i] = def;
               }
-              
+
             }//process '+N'
             else if (typeof newProfile.level[i] == 'string'
                   && newProfile.level[i][0] === '+'){
-                  rec = parseInt(newProfile.level[i].replace(/\D/g,''));  
+                  rec = parseInt(newProfile.level[i].replace(/\D/g,''));
                   rec = rec > 0 ? rec : 0;
                   //setting empty array to handle later by fallback
                   newProfile.level[i] = [];
@@ -424,17 +428,17 @@ function addProfile(profession, profile, base){
          var baseLevel = baseLevels[i] || [];
          newProfile.level[i] = baseLevel;
       }
-        
+
       //fallback from empty array to copy one before
       if (Array.isArray(newProfile.level[i]) && !newProfile.level[i].length && i> 0){
         newProfile.level[i] = newProfile.level[i-1];
       }
     }
-    
+
     console.info("profile added ",newProfile.profileName, newProfile);
     professionSet.profiles.push(newProfile);
 }
-   
+
 
     /*
      * Tasklist can be modified to configure the training you want to perform.
@@ -555,27 +559,27 @@ function addProfile(profession, profile, base){
                 "Leadership_Tier3_16r_Buildshelters", "Leadership_Tier3_13_Patrol", "Leadership_Tier3_19_Acquire", "Leadership_Tier3_17_Deliver",
                 "Leadership_Tier3_15_Rescue", "Leadership_Tier2_9_Chart", "Leadership_Tier2_12_Taxes", "Leadership_Tier1_5_Explore"
             ],
-            21: ["Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier4_21r_Killelemental",
+            21: ["Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3",
                 "Leadership_Tier3_20_Destroy", "Leadership_Tier4_21_Protectmagic",
                 "Leadership_Tier3_13r_Protectdiamonds", "Leadership_Tier2_12_Taxes", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
             ],
-            22: ["Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier4_21r_Killelemental",
+            22: ["Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3",
                 "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics",
                 "Leadership_Tier3_13r_Protectdiamonds", "Leadership_Tier2_12_Taxes", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
             ],
             23: ["Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3",
-                "Leadership_Tier4_23r_Securepilgrimage", "Leadership_Tier4_21r_Killelemental",
+                "Leadership_Tier4_23r_Securepilgrimage",
                 "Leadership_Tier4_23_Guardnoble", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics",
                 "Leadership_Tier3_13r_Protectdiamonds", "Leadership_Tier2_12_Taxes", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
             ],
             24: ["Leadership_Tier4_24r_Killdragon",
                 "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier4_23r_Securepilgrimage",
-                "Leadership_Tier4_24_Wizardsseneschal", "Leadership_Tier4_23_Guardnoble", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics", "Leadership_Tier4_21r_Killelemental",
+                "Leadership_Tier4_24_Wizardsseneschal", "Leadership_Tier4_23_Guardnoble", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics",
                 "Leadership_Tier3_13r_Protectdiamonds", "Leadership_Tier2_12_Taxes", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
             ],
-            25: ["Leadership_Tier4_25r_Huntexperiment", "Leadership_Tier4_24r_Killdragon",
-                "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier4_23r_Securepilgrimage",
-                "Leadership_Tier4_25_Battleelementalcultists", "Leadership_Tier4_24_Wizardsseneschal", "Leadership_Tier4_23_Guardnoble", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics", "Leadership_Tier4_21r_Killelemental",
+            25: ["Leadership_Tier4_25r_Huntexperiment", "Leadership_Tier4_24r_Killdragon", "Leadership_Tier4_22r_Capturebandithq",
+                "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3",
+                "Leadership_Tier4_25_Battleelementalcultists", "Leadership_Tier4_24_Wizardsseneschal", "Leadership_Tier4_23_Guardnoble", "Leadership_Tier3_20_Destroy",  "Leadership_Tier4_21_Protectmagic", "Leadership_Tier4_22_Guardclerics",
                 "Leadership_Tier3_13r_Protectdiamonds", "Leadership_Tier2_12_Taxes", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
             ],
         }
@@ -767,13 +771,13 @@ function addProfile(profession, profile, base){
                 17 : ["Jewelcrafting_Tier3_Neck_Offense_3", "Jewelcrafting_Tier3_Waist_Offense_3", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 18 : ["Jewelcrafting_Tier3_Neck_Offense_3", "Jewelcrafting_Tier3_Waist_Misc_3", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 19 : ["Jewelcrafting_Tier3_Neck_Offense_3", "Jewelcrafting_Tier3_Waist_Misc_3", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
-                
+
                 20 : ["Jewelcrafting_Tier3_Neck_Misc_3", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 21 : ["Jewelcrafting_Tier3_Neck_Misc_3", "Jewelcrafting_Tier4_Refine_Basic", "Jewelcrafting_Tier4_Gather_Basic", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 22 : ["Jewelcrafting_Tier4_Neck_Base_3", "Jewelcrafting_Tier4_Refine_Basic", "Jewelcrafting_Tier4_Gather_Basic", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 23 : ["Jewelcrafting_Tier4_Neck_Defense_3",  "Jewelcrafting_Tier4_Neck_Offense_3", "Jewelcrafting_Tier4_Gather_Basic", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
                 24 : ["Jewelcrafting_Tier4_Neck_Misc_3", "Jewelcrafting_Tier3_Neck_Misc_3", "Jewelcrafting_Tier4_Gather_Basic", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
-                //basic resources  for lvl 16 and 15 items. 
+                //basic resources  for lvl 16 and 15 items.
                 25 : ["Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
             },
         }]
@@ -794,7 +798,7 @@ function addProfile(profession, profile, base){
             21: ["Jewelcrafting_Tier4_Refine_Basic_Mass"],
             22 : '+25',
         },
-    });    
+    });
 
     addProfile("Jewelcrafting", {
         profileName: "21->25 gather",
@@ -814,16 +818,16 @@ function addProfile(profession, profile, base){
             16: ["Jewelcrafting_Tier3_Neck_Offense_3", "Jewelcrafting_Tier3_Refine_Basic", "Jewelcrafting_Tier3_Gather_Basic", "Jewelcrafting_Tier2_Gather_Basic", "Jewelcrafting_Tier1_Gather_Basic"],
             17 : '+25',
             25: ["Jewelcrafting_Tier4_Neck_Offense_4_Purple", //Exquisite Adamant Necklace of Piercing
-                  "Jewelcrafting_Tier4_Neck_Misc_4_Purple", // Exquisite Adamant Necklace of Recovery 
+                  "Jewelcrafting_Tier4_Neck_Misc_4_Purple", // Exquisite Adamant Necklace of Recovery
                   "Jewelcrafting_Tier4_Neck_Defense_4_Purple",//Exquisite Adamant Necklace of Regeneration
                   "Jewelcrafting_Tier4_Ring_Offense_4_Purple",//Exquisite Adamant Ring of Piercing
                   "Jewelcrafting_Tier4_Ring_Misc_4_Purple",//Exquisite Adamant Ring of Recovery
                   "Jewelcrafting_Tier4_Ring_Defense_4_Purple",//Exquisite Adamant Ring of Regeneration
-                  "Jewelcrafting_Tier3_Neck_Offense_3", 
+                  "Jewelcrafting_Tier3_Neck_Offense_3",
                   "Jewelcrafting_Tier2_Refine_Basic", "Jewelcrafting_Tier1_Refine_Basic"],
         },
     });
-    
+
     addProfile("Jewelcrafting", {
         profileName: "Craft Purple Rings",
         isProfileActive: true,
@@ -835,13 +839,13 @@ function addProfile(profession, profile, base){
                 "Jewelcrafting_Tier4_Ring_Misc_4_Purple", //Exquisite Adamant Ring of Recovery
                 "Jewelcrafting_Tier4_Ring_Defense_4_Purple", //Exquisite Adamant Ring of Regeneration
                   "Jewelcrafting_Tier4_Neck_Offense_4_Purple", //Exquisite Adamant Necklace of Piercing
-                  "Jewelcrafting_Tier4_Neck_Misc_4_Purple", // Exquisite Adamant Necklace of Recovery 
+                  "Jewelcrafting_Tier4_Neck_Misc_4_Purple", // Exquisite Adamant Necklace of Recovery
                   "Jewelcrafting_Tier4_Neck_Defense_4_Purple",//Exquisite Adamant Necklace of Regeneration
-                  "Jewelcrafting_Tier3_Ring_Offense_3",  
+                  "Jewelcrafting_Tier3_Ring_Offense_3",
                   "Jewelcrafting_Tier3_Refine_Basic"]
         },
     });
-    
+
 
     addProfile("Jewelcrafting", {
         profileName: "Craft Purple lvl 25",
@@ -856,8 +860,8 @@ function addProfile(profession, profile, base){
                   "Jewelcrafting_Tier3_Refine_Basic"//timeout task
                   ],
         },
-    }); 
-   
+    });
+
 
     definedTask["Mailsmithing"] = {
         taskListName : "Mailsmithing",
@@ -896,11 +900,11 @@ function addProfile(profession, profile, base){
                 23 : ["Med_Armorsmithing_Tier3_Chain_Pants"],
                 24 : ["Med_Armorsmithing_Tier3_Chain_Pants"],
                 25 : ["Crafted_Med_Armorsmithing_T4_Refine_Basic", "Crafted_Med_Armorsmithing_T4_Gather_Basic"],
-                
+
             }
         }]
     };
-    
+
     addProfile("Mailsmithing", {
         profileName : "mass refining",
         isProfileActive : true,
@@ -916,7 +920,7 @@ function addProfile(profession, profile, base){
             21: ["Crafted_Med_Armorsmithing_T4_Refine_Basic_Mass"],
             22: "+25",
         },
-    });    
+    });
 
     addProfile("Mailsmithing", {
         profileName: "21->25 gather",
@@ -927,7 +931,7 @@ function addProfile(profession, profile, base){
             25: ["Crafted_Med_Armorsmithing_T4_Refine_Basic", "Crafted_Med_Armorsmithing_T4_Gather_Basic"],
         },
     });
-    
+
     addProfile("Mailsmithing", {
         profileName: "Berserker's Chainmail and rares",
         isProfileActive: true,
@@ -937,11 +941,11 @@ function addProfile(profession, profile, base){
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
-                      
+
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Green_Shirt_Dps",//Berserker's Elemental Chainmail
                 "Med_Armorsmithing_Tier3_Refine_Basic"
@@ -955,14 +959,14 @@ function addProfile(profession, profile, base){
         level: {
             25: ["Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Berserker's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Tank", //Berserker's Exquisite Elemental Chainmail
-                  
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
 
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Green_Pants_Dps",//Berserker's Elemental Chausses
                 "Med_Armorsmithing_Tier3_Refine_Basic"
@@ -970,21 +974,21 @@ function addProfile(profession, profile, base){
             ],
         },
     });
-    
+
     addProfile("Mailsmithing", {
         profileName: "Soldier's Chainmail and rares",
         isProfileActive: true,
         level: {
             25: ["Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
-                      
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Tank", //Berserker's Exquisite Elemental Chainmail
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Berserker's Exquisite Elemental Chausses
-                      
+
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Green_Shirt_Tank",//Soldier's Elemental Chainmail
                 "Med_Armorsmithing_Tier3_Refine_Basic"
@@ -1003,27 +1007,27 @@ function addProfile(profession, profile, base){
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Tank", //Berserker's Exquisite Elemental Chainmail
 
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Green_Pants_Tank",//Soldier's Elemental Chausses
                 "Med_Armorsmithing_Tier3_Refine_Basic"
                 ],
             },
         });
-    
-    
+
+
     addProfile("Mailsmithing", {
         profileName: "Zealot's Chainmail and rares",
         isProfileActive: true,
         level: {
             25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
-                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
-                      
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
+
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
 
@@ -1035,17 +1039,17 @@ function addProfile(profession, profile, base){
                 ],
             },
         });
-    
+
 
     addProfile("Mailsmithing", {
         profileName: "Zealot's Chausses and rares",
         isProfileActive: true,
         level: {
-            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail                      
+
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
 
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
@@ -1059,18 +1063,18 @@ function addProfile(profession, profile, base){
             },
         });
 
-    
-   
+
+
     addProfile("Mailsmithing", {
         profileName: "Prelate's Chainmail and rares",
         isProfileActive: true,
         level: {
-            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
+            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
 
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
-                      
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
 
@@ -1087,12 +1091,12 @@ function addProfile(profession, profile, base){
         profileName: "Prelate's Chausses and rares",
         isProfileActive: true,
         level: {
-            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail                      
-                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
+
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                      
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
 
@@ -1109,12 +1113,12 @@ function addProfile(profession, profile, base){
         profileName: "craft rares only",
         isProfileActive: true,
         level: {
-            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses 
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail                      
-                      
-                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses 
+            25: ["Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Tank", //Prelate's Exquisite Elemental Chausses
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Tank", //Prelate's Exquisite Elemental Chainmail
+
+                "Crafted_Med_Armorsmithing_Chain_T4_Purple_Pants_Dps", //Zealot's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Chain_T4_Purple_Shirt_Dps", //Zealot's Exquisite Elemental Chainmail
-                     
+
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Pants_Dps", //Soldier's Exquisite Elemental Chausses
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Dps", //Soldier's Exquisite Elemental Chainmail
 
@@ -1122,14 +1126,14 @@ function addProfile(profession, profile, base){
                 "Crafted_Med_Armorsmithing_Scale_T4_Purple_Shirt_Tank", //Berserker's Exquisite Elemental Chainmail
                    "Med_Armorsmithing_Tier2_Refine_Basic"]
         }
-    }); 
+    });
 
     addProfile("Mailsmithing", {
         profileName: "Wondrous Sprocket",
         isProfileActive: false,
         level: {
             6: ["Med_Armorsmithing_Tier1_Event_Gond"],
-            7: "+25",            
+            7: "+25",
         },
     });
 
@@ -1250,7 +1254,7 @@ function addProfile(profession, profile, base){
             },
         }  ]
     };
-    
+
     addProfile("Leatherworking", {
         profileName : "mass refining",
         isProfileActive : true,
@@ -1266,7 +1270,7 @@ function addProfile(profession, profile, base){
             21: ["Leatherworking_Tier4_Refine_Basic_Mass"],
             22: "+25",
         },
-    });    
+    });
 
     addProfile("Leatherworking", {
         profileName: "20->25 gather",
@@ -1299,7 +1303,7 @@ function addProfile(profession, profile, base){
                 'Leatherworking_Tier4_Leather_Shirt_Special_2_Set2', //Exquisite Elemental Tunic
                 'Leatherworking_Tier4_Leather_Pants_Special_2_Set2', //Exquisite Elemental Trousers
                   'Leatherworking_Tier4_Leather_Pants_Special_2', //Exquisite Elemental Pants
-                'Leatherworking_Tier4_Leather_Shirt2', //Elemental Leather Shirt 
+                'Leatherworking_Tier4_Leather_Shirt2', //Elemental Leather Shirt
                 "Leatherworking_Tier3_Gather_Basic"
                     ]
         }
@@ -1313,12 +1317,12 @@ function addProfile(profession, profile, base){
                 'Leatherworking_Tier4_Leather_Shirt_Special_2', //Exquisite Elemental Shirt
                 'Leatherworking_Tier4_Leather_Pants_Special_2_Set2', //Exquisite Elemental Trousers
                   'Leatherworking_Tier4_Leather_Pants_Special_2', //Exquisite Elemental Pants
-                'Leatherworking_Tier4_Leather_Shirt2_Set2', //Elemental Leather Tunic 
+                'Leatherworking_Tier4_Leather_Shirt2_Set2', //Elemental Leather Tunic
                 'Leatherworking_Tier3_Gather_Basic'
                     ]
         }
     });
-   
+
     addProfile("Leatherworking", {
         profileName: "craft  Elemental Trousers",
         level: {
@@ -1327,7 +1331,7 @@ function addProfile(profession, profile, base){
                   'Leatherworking_Tier4_Leather_Pants_Special_2', //Exquisite Elemental Pants
                 'Leatherworking_Tier4_Leather_Shirt_Special_2_Set2', //Exquisite Elemental Tunic
                 'Leatherworking_Tier4_Leather_Shirt_Special_2', //Exquisite Elemental Shirt
-                'Leatherworking_Tier4_Leather_Pants2_Set2', //Elemental Leather Trousers 
+                'Leatherworking_Tier4_Leather_Pants2_Set2', //Elemental Leather Trousers
                 'Leatherworking_Tier3_Gather_Basic'
                     ]
         }
@@ -1341,7 +1345,7 @@ function addProfile(profession, profile, base){
                 'Leatherworking_Tier4_Leather_Pants_Special_2_Set2', //Exquisite Elemental Trousers
                 'Leatherworking_Tier4_Leather_Shirt_Special_2_Set2', //Exquisite Elemental Tunic
                 'Leatherdeworking_Tier4_Leather_Shirt_Special_2', //Exquisite Elemental Shirt
-                'Leatherworking_Tier4_Leather_Pants2', //Elemental Leather Pants 
+                'Leatherworking_Tier4_Leather_Pants2', //Elemental Leather Pants
                 'Leatherworking_Tier3_Gather_Basic'
                     ]
         }
@@ -1564,6 +1568,43 @@ function addProfile(profession, profile, base){
     });
 
     addProfile("Weaponsmithing", {
+        profileName : "mass gathering",
+        isProfileActive : true,
+        useMassTask : true,
+        level : {
+            0: ["Weaponsmithing_Tier0_Intro"],
+            1: ["Weaponsmithing_Tier1_Gather_Basic_Mass"],
+            7: ["Weaponsmithing_Tier2_Gather_Basic_Mass"],
+            14: ["Weaponsmithing_Tier3_Gather_Basic_Mass"],
+            21: ["Weaponsmithing_Tier4_Gather_Basic_Mass"],
+        },
+    });
+
+    addProfile("Weaponsmithing", {
+        profileName: "T1 Gathering",
+        isProfileActive: true,
+        level: {
+            1: ["Weaponsmithing_Tier1_Gather_Basic"],
+        },
+    });
+
+    addProfile("Weaponsmithing", {
+        profileName: "T2 Gathering",
+        isProfileActive: true,
+        level: {
+            7: ["Weaponsmithing_Tier2_Gather_Basic"],
+        },
+    });
+
+    addProfile("Weaponsmithing", {
+        profileName: "T3 Gathering",
+        isProfileActive: true,
+        level: {
+            14: ["Weaponsmithing_Tier3_Refine_Basic_Mass"],
+        },
+    });
+
+    addProfile("Weaponsmithing", {
         profileName: "Wondrous Sprocket",
         isProfileActive: false,
         level: {
@@ -1648,7 +1689,7 @@ function addProfile(profession, profile, base){
         level: {
             25: ["Alchemy_Tier4_Experimentation_Rank25", "Alchemy_Tier4_Potency_Potion_Superior", "Alchemy_Tier4_Create_Elemental_Aggregate", "Alchemy_Tier3_Potency_Potion_Major", "Alchemy_Tier2_Aquaregia", "Alchemy_Tier3_Refine_Basic", "Alchemy_Tier3_Gather_Components"],
         }
-    }); 
+    });
 
     addProfile("Alchemy", {
         profileName: "Blue & Green Vitriol",
@@ -1668,6 +1709,54 @@ function addProfile(profession, profile, base){
         },
     });
 
+    // MBNM: Adding Vitriol gathering for Alchemy
+    addProfile("Alchemy", {
+        profileName : "Purple/Orange Refine",
+        isProfileActive : true,
+        level: {
+            21:["Alchemy_Tier4_Refine_Basic","Alchemy_Tier4_Gather_Components"],
+            22:["Alchemy_Tier4_Refine_Basic","Alchemy_Tier4_Gather_Components"],
+            23:["Alchemy_Tier4_Refine_Basic","Alchemy_Tier4_Gather_Components"],
+            24:["Alchemy_Tier4_Refine_Basic","Alchemy_Tier4_Gather_Components"],
+            25:["Alchemy_Tier4_Refine_Basic","Alchemy_Tier4_Gather_Components"],
+        }
+    });
+    addProfile("Alchemy", {
+        profileName: "Regia",
+        level: {
+            20: ["Alchemy_Tier2_Aquaregia"]
+        }
+    });
+    addProfile("Alchemy", {
+        profileName: "Vitae",
+        level: {
+            20: ["Alchemy_Tier2_Aquavitae_2"]
+        }
+    });
+
+    addProfile("Alchemy", {
+        profileName: "Yellow & Silver Vitriol",
+        isProfileActive: true,
+        level: {
+            7: ["Alchemy_Tier2_Refine_Basic", "Alchemy_Tier2_Gather_Components"],
+        },
+    });
+
+    addProfile("Leadership", {
+        profileName: "Character XP",
+        isProfileActive: true,
+        level: {
+//                 20: ["Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier3_13_Training", "Leadership_Tier1_5_Explore", "Leadership_Tier1_4_Protect", "Leadership_Tier2_7_Training"],
+//                 21: ["Leadership_Tier4_21_Training", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier3_13_Training", "Leadership_Tier1_5_Explore", "Leadership_Tier1_4_Protect", "Leadership_Tier2_7_Training"],
+                22: ["Leadership_Tier4_22_Guardclerics", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_21_Training"],
+                23: ["Leadership_Tier4_23r_Securepilgrimage", "Leadership_Tier4_23_Guardnoble", "Leadership_Tier4_22_Guardclerics", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier3_20_Destroy", "Leadership_Tier4_21_Training", "Leadership_Tier4_22_Guardclerics"],
+//                 24: ["Leadership_Tier4_23_Guardnoble", "Leadership_Tier4_21_Training", "Leadership_Tier4_22_Guardclerics", "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"],
+//                 25: ["Leadership_Tier4_25r_Huntexperiment", "Leadership_Tier3_20r_Master2", "Leadership_Tier3_20r_Master1", "Leadership_Tier3_20r_Master3", "Leadership_Tier4_22r_Capturebandithq", "Leadership_Tier3_13r_Protectdiamonds",
+//                     "Leadership_Tier3_20_Destroy", "Leadership_Tier2_12_Taxes", "Leadership_Tier4_24r_Killdragon", "Leadership_Tier4_25_Battleelementalcultists", "Leadership_Tier3_16_Fight", "Leadership_Tier2_10_Battle",
+//                     "Leadership_Tier3_13_Patrol", "Leadership_Tier2_9_Chart", "Leadership_Tier1_5_Explore"
+//                 ],
+        }
+    });
 
     // Profession priority list by order
     var tasklist = [
@@ -1688,7 +1777,7 @@ function addProfile(profession, profile, base){
     var customProfiles = [];  // [ { taskName: 'name', baseProfile: 'profileName' / null, profile: JSON.parsed_from_input }, { } ....]
     var scriptSettings = {};
 
-    // Populated at login   
+    // Populated at login
     var loggedAccount = null;
     var UIaccount = null;
     var accountSettings = {};
@@ -1750,7 +1839,7 @@ function addProfile(profession, profile, base){
         slotUse: [],
     };
 
-    /*  For searching unsafeWindow.client.dataModel.model.ent.main.inventory.assignedslots / unsafeWindow.client.dataModel.model.ent.main.inventory.notassignedslots  
+    /*  For searching unsafeWindow.client.dataModel.model.ent.main.inventory.assignedslots / unsafeWindow.client.dataModel.model.ent.main.inventory.notassignedslots
     This needs some design change. */
 
     // The definitions themselves are at the bottom of the script
@@ -1781,7 +1870,7 @@ function addProfile(profession, profile, base){
         fname: 'Unified Elements',
         name: 'Crafting_Resource_Elemental_Unified',
         bank: false, unbound: true, btc: true, bta: true
-    }, 
+    },
 ];
     var trackResources;
     try {
@@ -1822,7 +1911,7 @@ function addProfile(profession, profile, base){
         tempScriptSettings = {};
     };
     scriptSettings = $.extend(true, {}, defaultScriptSettings, tempScriptSettings);
-    
+
     // Loading custom profiles.
     try {
         customProfiles = JSON.parse(GM_getValue("custom_profiles", null));
@@ -1836,12 +1925,12 @@ function addProfile(profession, profile, base){
     customProfiles.forEach(function (cProfile, idx) {
         addProfile(cProfile.taskName, cProfile.profile, cProfile.baseProfile);
     });
-    
+
     unsafeWindow.console.log('DebugMode set to: ' + scriptSettings.general.scriptDebugMode);
     console = scriptSettings.general.scriptDebugMode ? unsafeWindow.console || fouxConsole : fouxConsole;
 
     var delay_modifier = parseFloat(scriptSettings.general.scriptDelayFactor);
-    delay.SHORT *= delay_modifier;      delay.MEDIUM *= delay_modifier;     delay.LONG *= delay_modifier; 
+    delay.SHORT *= delay_modifier;      delay.MEDIUM *= delay_modifier;     delay.LONG *= delay_modifier;
     delay.MINS *= 1;                    delay.DEFAULT *= delay_modifier;    delay.TIMEOUT *= delay_modifier;
 
 
@@ -1967,7 +2056,7 @@ function addProfile(profession, profile, base){
     // Usable only after login (return account or char settings, depending on override and match)
     function getSetting(group, name) {
         var override = false;
-        if (typeof(charSettingsList[curCharName]) !== undefined && typeof(charSettingsList[curCharName].general) !== undefined) { 
+        if (typeof(charSettingsList[curCharName]) !== undefined && typeof(charSettingsList[curCharName].general) !== undefined) {
             override = charSettingsList[curCharName].general.overrideGlobalSettings;
         }
         else console.warn("overrideGlobalSettings could not been reached." );
@@ -1979,7 +2068,7 @@ function addProfile(profession, profile, base){
             }
             else console.warn("charSetting value could not been reached for " + group + " " + name);
         }
-        
+
         if (typeof(accountSettings[group]) !== undefined &&
             typeof(accountSettings[group][name]) !== undefined) {
                 return accountSettings[group][name];
@@ -1989,10 +2078,10 @@ function addProfile(profession, profile, base){
     }
 
 
-    // UI Settings 
+    // UI Settings
     var settingnames = [
         //{scope: 'script', group: 'general', name: 'scriptPaused',     title: 'Pause Script', type: 'checkbox', pane: 'main', tooltip: 'Disable All Automation'},
-        {scope: 'script', group: 'general', name: 'language', title: tr('settings.main.language'), type: 'select', pane: 'main', tooltip: tr('settings.main.language.tooltip'), 
+        {scope: 'script', group: 'general', name: 'language', title: tr('settings.main.language'), type: 'select', pane: 'main', tooltip: tr('settings.main.language.tooltip'),
             opts: [ { name: 'english',  value: 'en'},
                     { name: 'polski',   value: 'pl'},
                     { name: 'français', value: 'fr'}],
@@ -2020,16 +2109,16 @@ function addProfile(profession, profile, base){
         {scope: 'script', group: 'general', name: 'saveCharNextTime', title: tr('settings.main.savenexttime'),   type: 'checkbox', pane: 'main', tooltip: tr('settings.main.savenexttime.tooltip')},
         {scope: 'script', group: 'general', name: 'maxCollectTaskAttempts', title: 'Number of attempts to collect task result',   type: 'select', pane: 'main', tooltip: 'After this number of attempts the the script will continue without collecting',
             opts: [ { name: '1',  value: 1},  { name: '2',  value: 2},  { name: '3',  value: 3}], },
-        
+
         {scope: 'account', group: 'generalSettings', name: 'openRewards', title: tr('settings.general.openrewards'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.openrewards.tooltip')},
         {scope: 'account', group: 'generalSettings', name: 'keepOneUnopened', title: tr('settings.general.keepOneUnopened'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.keepOneUnopened.tooltip')},
         {scope: 'account', group: 'generalSettings', name: 'openInvocation', title: tr('settings.general.openInvocation'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.openInvocation.tooltip')},
         {scope: 'account', group: 'generalSettings', name: 'refineAD', title: tr('settings.general.refinead'),           type: 'checkbox', pane: 'main', tooltip: tr('settings.general.refinead.tooltip')},
         {scope: 'account', group: 'generalSettings', name: 'runSCA', title: tr('settings.general.runSCA'),               type: 'select',   pane: 'main', tooltip: tr('settings.general.runSCA.tooltip'),
-            opts: [ { name: 'never',        value: 'never'}, 
-                    { name: 'free time',    value: 'free'}, 
+            opts: [ { name: 'never',        value: 'never'},
+                    { name: 'free time',    value: 'free'},
                     { name: 'always',       value: 'always'}],
-            },        
+            },
         {scope: 'account', group: 'professionSettings', name: 'fillOptionals',         type: 'checkbox', pane: 'prof', title: tr('settings.profession.fillOptionals'),   tooltip: tr('settings.profession.fillOptionals.tooltip')},
         {scope: 'account', group: 'professionSettings', name: 'autoPurchaseRes',       type: 'checkbox', pane: 'prof', title: tr('settings.profession.autoPurchase'),    tooltip: tr('settings.profession.autoPurchase.tooltip')},
         {scope: 'account', group: 'professionSettings', name: 'trainAssets',           type:'checkbox',  pane: 'prof', title: tr('settings.profession.trainAssets'),     tooltip: tr('settings.profession.trainAssets.tooltip')},
@@ -2063,17 +2152,17 @@ function addProfile(profession, profile, base){
         {scope: 'char', group: 'general', name: 'active',     type:'checkbox',    pane: 'main_not_tab',    title: 'Active',   tooltip: 'The char will be processed by the script'},
         {scope: 'char', group: 'general', name:'overrideGlobalSettings',    type:'checkbox',    pane:'main_not_tab',    title:'Override account settings for this char',   tooltip:''},
         {scope: 'char', group: 'general', name:'manualTaskSlots',    type:'checkbox',    pane:'main_not_tab',    title:'Use manual task allocation tab',   tooltip:'Per slot profile allocation'},
-        
+
         {scope: 'char', group: 'generalSettings', name: 'openRewards', title: tr('settings.general.openrewards'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.openrewards.tooltip')},
         {scope: 'char', group: 'generalSettings', name: 'keepOneUnopened', title: tr('settings.general.keepOneUnopened'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.keepOneUnopened.tooltip')},
         {scope: 'char', group: 'generalSettings', name: 'openInvocation', title: tr('settings.general.openInvocation'),  type: 'checkbox', pane: 'main', tooltip: tr('settings.general.openInvocation.tooltip')},
         {scope: 'char', group: 'generalSettings', name: 'refineAD',    title: tr('settings.general.keepOneUnopened'),           type: 'checkbox', pane: 'main', tooltip: tr('settings.general.refinead.tooltip')},
         {scope: 'char', group: 'generalSettings', name: 'runSCA',    title: tr('settings.general.runSCA'),               type: 'select',   pane: 'main', tooltip: tr('settings.general.runSCA.tooltip'),
-            opts: [ { name: 'never',        value: 'never'}, 
-                    { name: 'free time',    value: 'free'}, 
+            opts: [ { name: 'never',        value: 'never'},
+                    { name: 'free time',    value: 'free'},
                     { name: 'always',       value: 'always'}],
-            },        
-        
+            },
+
         {scope: 'char', group: 'professionSettings', name: 'fillOptionals',         type: 'checkbox', pane: 'prof', title: tr('settings.profession.fillOptionals'),   tooltip: tr('settings.profession.fillOptionals.tooltip')},
         {scope: 'char', group: 'professionSettings', name: 'autoPurchaseRes',       type: 'checkbox', pane: 'prof', title: tr('settings.profession.autoPurchase'),    tooltip: tr('settings.profession.autoPurchase.tooltip')},
         {scope: 'char', group: 'professionSettings', name: 'trainAssets',           type:'checkbox',  pane: 'prof', title: tr('settings.profession.trainAssets'),     tooltip: tr('settings.profession.trainAssets.tooltip')},
@@ -2083,7 +2172,7 @@ function addProfile(profession, profile, base){
         {scope: 'char', group: 'professionSettings', name: 'stopNotLeadership',        type:'select',    pane: 'prof', title: tr('settings.profession.stopNotLeadership'),      tooltip: tr('settings.profession.stopNotLeadership.tooltip'),
             opts:[{name:'never',value:0},{name: '20' ,value: 20},{name: '25' ,value: 25}]},
         {scope: 'char', group: 'professionSettings', name: 'stopAlchemyAt3',        type:'checkbox',    pane: 'prof', title: tr('settings.profession.stopAlchemyAt3'),      tooltip: tr('settings.profession.stopAlchemyAt3.tooltip')},
-        
+
         {scope: 'char', group: 'vendorSettings', name:'vendorJunk',  type:'checkbox',     pane:'vend',   title:'Auto Vendor junk..',     tooltip:'Vendor all (currently) winterfest fireworks+lanterns'},
         {scope: 'char', group: 'vendorSettings', name:'vendorKitsLimit', type:'checkbox', pane:'vend',   title:'Vendor/Maintain Altar Node Kit Stacks',  tooltip:'Limit skill kits stacks to 50/Altars80, vendor kits unusable by class, remove all if player has one bag or full bags'},
         {scope: 'char', group: 'vendorSettings', name:'vendorAltarsLimit', type:'checkbox', pane:'vend', title:'Vendor/Maintain Altar Stacks',  tooltip:'Limit Altars to 80,remove all if player has one bag or full bags'},
@@ -2094,17 +2183,17 @@ function addProfile(profession, profile, base){
         {scope: 'char', group: 'vendorSettings', name:'vendorPots2',     type:'checkbox', pane:'vend',   title:'Auto Vendor lesser potions (lvl 15)',tooltip:'Vendor all lesser potions (lvl 15) found in player bags'},
         {scope: 'char', group: 'vendorSettings', name:'vendorPots3',     type:'checkbox', pane:'vend',   title:'Auto Vendor potions (lvl 30)',       tooltip:'Vendor all potions (lvl 30) found in player bags'},
         {scope: 'char', group: 'vendorSettings', name:'vendorPots4',     type:'checkbox', pane:'vend',   title:'Auto Vendor greater potions (lvl 45)',   tooltip:'Vendor all greater potions (lvl 45) found in player bags'},
-        {scope: 'char', group: 'vendorSettings', name:'vendorPots5',     type:'checkbox', pane:'vend',   title:'Auto Vendor major potions (lvl 60)',     tooltip:'Auto Vendor major potions (lvl 60)'},        
+        {scope: 'char', group: 'vendorSettings', name:'vendorPots5',     type:'checkbox', pane:'vend',   title:'Auto Vendor major potions (lvl 60)',     tooltip:'Auto Vendor major potions (lvl 60)'},
         {scope: 'char', group: 'vendorSettings', name:'vendorEnchR1',    type:'checkbox', pane:'vend',   title:'Auto Vendor enchants & runes Rank 1',    tooltip:'Vendor all Rank 1 enchantments & runestones found in player bags'},
         {scope: 'char', group: 'vendorSettings', name:'vendorEnchR2',    type:'checkbox', pane:'vend',   title:'Auto Vendor enchants & runes Rank 2',    tooltip:'Vendor all Rank 2 enchantments & runestones found in player bags'},
         {scope: 'char', group: 'vendorSettings', name:'vendorEnchR3',    type:'checkbox', pane:'vend',   title:'Auto Vendor enchants & runes Rank 3',    tooltip:'Vendor all Rank 3 enchantments & runestones found in player bags'},
-        {scope: 'char', group: 'vendorSettings', name:'vendorHealingPots',     type:'checkbox', pane:'vend',   title:'Auto Vendor healing potions (1-60)',     tooltip:'Auto Vendor healing potions (lvl 60)'},        
+        {scope: 'char', group: 'vendorSettings', name:'vendorHealingPots',     type:'checkbox', pane:'vend',   title:'Auto Vendor healing potions (1-60)',     tooltip:'Auto Vendor healing potions (lvl 60)'},
         {scope: 'char', group: 'consolidationSettings', name:'consolidate',    type:'checkbox', pane:'bank', title: tr('settings.consolid.consolidate'),    tooltip: tr('settings.consolid.consolidate.tooltip'), border:true},
         {scope: 'char', group: 'consolidationSettings', name:'minToTransfer',  type:'text',     pane:'bank', title: tr('settings.consolid.minToTransfer'),  tooltip: tr('settings.consolid.minToTransfer.tooltip')},
         {scope: 'char', group: 'consolidationSettings', name:'minCharBalance', type:'text',     pane:'bank', title: tr('settings.consolid.minCharBalance'), tooltip: tr('settings.consolid.minCharBalance.tooltip')},
-        
-        
-        
+
+
+
     ];
 
 /*
@@ -2116,7 +2205,7 @@ function addProfile(profession, profile, base){
         }
     }
     */
-   
+
     // Page Settings
     var PAGES = Object.freeze({
         LOGIN: {
@@ -2135,14 +2224,14 @@ function addProfile(profession, profile, base){
 
     function GetCurrentPage() {
         var pageReturn;
-        
+
         $.each(PAGES, function(index, page) {
             if ($(page["path"]).filter(":visible").length) {
                 pageReturn = page["name"];
                 return false;
             }
         });
-        
+
         return pageReturn;
     }
 
@@ -2154,7 +2243,7 @@ function addProfile(profession, profile, base){
     function page_LOGIN() {
         //if (!$("form > p.error:visible").length && settings["autologin"]) {
         // No previous log in error - attempt to log in
-        
+
         if (scriptSettings.general.autoLogin) {
             console.log("Setting username");
             $("input#user").val(scriptSettings.general.autoLoginAccount);
@@ -2213,7 +2302,7 @@ function addProfile(profession, profile, base){
                 var _task = tasklist.filter(function(task) {
                     return task.taskListName === charSettingsList[curCharName].taskListSettingsManual[slotIndex].Profession;
                 })[0];
-                
+
                 var _profile = _task.profiles.filter(function(profile) {
                     return profile.profileName === charSettingsList[curCharName].taskListSettingsManual[slotIndex].Profile;
                 })[0];
@@ -2240,7 +2329,7 @@ function addProfile(profession, profile, base){
                             })
                         level = (level[0]) ? level[0].currentrank : 0;
                         console.log(level, task.taskListName, (charSettingsList[curCharName].taskListSettings[task.taskListName].stopTaskAtLevel == 0 || charSettingsList[curCharName].taskListSettings[task.taskListName].stopTaskAtLevel > level));
-                        return ((charSettingsList[curCharName].taskListSettings[task.taskListName].taskSlots > 0) 
+                        return ((charSettingsList[curCharName].taskListSettings[task.taskListName].taskSlots > 0)
                                 && (failedTasksList.indexOf(task.taskListName) === -1)
                                 && (charSettingsList[curCharName].taskListSettings[task.taskListName].stopTaskAtLevel == 0 || charSettingsList[curCharName].taskListSettings[task.taskListName].stopTaskAtLevel > level));
                     })
@@ -2320,7 +2409,7 @@ function addProfile(profession, profile, base){
                     $(".daily-awards-button button").trigger('click');
                 });
             });
-            
+
             //console.log("after dice");
             WaitForNotState(".modal-window.daily-dice").done(function() {
                 charStatisticsList[_charName].general.lastSCAVisit = Date.now();
@@ -2380,13 +2469,16 @@ function addProfile(profession, profile, base){
                 return;
             }
 
-            console.log("Checking SCA Dialy for", _fullCharName, "...");
+            console.info("Checking SCA Daily for", _fullCharName, "...");
 
             // Do SCA daily dice roll if the button comes up
             WaitForState(".daily-dice-intro").done(function() {
                 $(".daily-dice-intro button").trigger('click');
                 WaitForState(".daily-awards-button").done(function() {
-                    $(".daily-awards-button button").trigger('click');
+                	// MBNM : I want to see the result if I'm watching
+                	window.setTimeout(function() {
+    	                    $(".daily-awards-button button").trigger('click');
+	                }, delay.SHORT);
                 });
             });
 
@@ -2426,11 +2518,11 @@ function addProfile(profession, profile, base){
             }
         });
         if (next) {
-            console.log("Next finished task at " + next.toLocaleString());
+            console.info("Next finished task at " + next.toLocaleTimeString() + ".  Adding " + settings["profdelay"] + " seconds.");
         } else {
-            console.log("No next finishing date found!!");
+            console.warn("No next finishing date found!!");
         }
-        return next;
+        return new Date( next.getTime() + (parseInt(settings["profdelay"])*1000) );
     }
 
     /**
@@ -2455,27 +2547,27 @@ function addProfile(profession, profile, base){
             return entry.name == prof.taskName;
         })[0].currentrank;
         var list = profile.level[level];
-        
-        var taskBlocked = ((getSetting('professionSettings','stopNotLeadership') == 20 && prof.taskName != 'Leadership' && level >= 20) || 
+
+        var taskBlocked = ((getSetting('professionSettings','stopNotLeadership') == 20 && prof.taskName != 'Leadership' && level >= 20) ||
             (getSetting('professionSettings','stopNotLeadership') == 25 && prof.taskName != 'Leadership' && level >= 25) ||
             (getSetting('professionSettings','stopAlchemyAt3') && prof.taskName == 'Alchemy' && level > 3));
-        
+
         if(list.length <= i || taskBlocked) {
             if (!taskBlocked) console.log("Task list exhausted for ", prof.taskListName, " at level ", level, " profile: ", profile.profileName);
             else console.warn("Task list blocked for ", prof.taskListName, " at level ", level, " profile: ", profile.profileName);
-            
+
             failedTasksList.push(prof.taskListName);
             if (typeof failedProfiles[prof.taskListName] === 'undefined') {
                 failedProfiles[prof.taskListName] = [];
             }
             failedProfiles[prof.taskListName].push(profile.profileName);
-            
+
             dfdNextRun.resolve(delay.SHORT);
             //switchChar();
             return false;
         }
-        console.log(prof.taskName, "is level", level);
-        console.log("createNextTask", list.length, i);
+        console.debug(prof.taskName, "is level", level);
+        console.debug("createNextTask ", list.length, " tasks in list, using #", i, " : ", list[i]);
 
         var taskName = list[i];
         console.log("Searching for task:", taskName);
@@ -2517,7 +2609,8 @@ function addProfile(profession, profile, base){
                             // Done
                             dfdNextRun.resolve(delay.SHORT);
                         });
-                        if (antiInfLoopTrap.prevCharName == antiInfLoopTrap.currCharName && antiInfLoopTrap.prevTaskName == antiInfLoopTrap.currTaskName) {
+                        console.info("Started: ", antiInfLoopTrap.currTaskName);
+                        if(antiInfLoopTrap.prevCharName == antiInfLoopTrap.currCharName && antiInfLoopTrap.prevTaskName == antiInfLoopTrap.currTaskName) {
                             antiInfLoopTrap.startCounter++;
                             console.log(antiInfLoopTrap.prevCharName + " starts " + antiInfLoopTrap.prevTaskName + " " + antiInfLoopTrap.startCounter + " time in row");
                         } else {
@@ -2526,7 +2619,7 @@ function addProfile(profession, profile, base){
                             antiInfLoopTrap.startCounter = 1;
                         }
                         if (antiInfLoopTrap.startCounter >= 10) {
-                            console.log("Restart needed: " + (antiInfLoopTrap.trapActivation - antiInfLoopTrap.startCounter) + " loop circuits to restart");
+                            console.warn("Restart needed: " + (antiInfLoopTrap.trapActivation - antiInfLoopTrap.startCounter) + " loop circuits to restart");
                         }
                         return true;
                     } else { // Button not enabled, something required was probably missing
@@ -2591,7 +2684,7 @@ function addProfile(profession, profile, base){
         // Return first object that matches exact craft name
         // edited by WloBeb - start Patrol the Mines task only if char has less than 10 Mining Claims
         var skip_setting = getSetting('professionSettings', 'skipPatrolTask');
-            
+
         if (taskname == "Leadership_Tier3_13_Patrol" && (skip_setting == 'always' ||
             (skip_setting == 'ad' && profile.profileName == "AD") || (skip_setting == 'ld20' && professionLevel >= 20) ||
             (skip_setting == 'AD&Lvl20' && professionLevel >= 20 && profile.profileName == "AD"))) {
@@ -2720,11 +2813,11 @@ function addProfile(profession, profile, base){
         // either no craftable items/assets found or other task requirements are not met
         // Skip crafting ingredient tasks for Leadership
         if (searchItem === null || !searchItem.length || (profname == 'Leadership' && !searchAsset && !searchItem.match(/Crafting_Asset_Craftsman/))) {
-            console.log("Failed to resolve item requirements for task:", taskname);
+            console.info("Failed to resolve item requirements for task:", taskname);
             return false;
         }
 
-        var massTaskAllowed = ((profile !== undefined) && (profile.useMassTask !== undefined) && (profile.useMassTask === true));            
+        var massTaskAllowed = ((profile !== undefined) && (profile.useMassTask !== undefined) && (profile.useMassTask === true));
 
         // Generate list of available tasks to search ingredients/assets from
         console.log("Searching ingredient tasks for:", profname);
@@ -2775,7 +2868,7 @@ function addProfile(profession, profile, base){
         });
 
         if (!taskList.length) {
-            console.log("No ingredient tasks found for:", taskname, searchItem);
+            console.warn("No ingredient tasks found for:", taskname, searchItem);
             if (!searchItem.match(/(_Research)|(_Craftsman_)|(Crafted_)/)) {
                 if (pleaseBuy.push("Please buy " + searchItem + " for " + unsafeWindow.client.getCurrentCharAtName()) > 5) {
                     pleaseBuy.shift();
@@ -2842,15 +2935,17 @@ function addProfile(profession, profile, base){
                 var T3_Rare = 0;
                 var T3_Uncommon = 0;
                 var usedCommon;
-                
-                var _enableSmartLeadership = getSetting('professionSettings','smartLeadershipAssets'); 
+
+                var _enableSmartLeadership = getSetting('professionSettings','smartLeadershipAssets');
                 if (_enableSmartLeadership) {
                     T3_Epic = countResource("Crafting_Asset_Craftsman_Leadership_T3_Epic"); // number of heroes in inventory
                     T3_Rare = countResource("Crafting_Asset_Craftsman_Leadership_T3_Rare"); // number of adventurers in inventory
                     T3_Uncommon = countResource("Crafting_Asset_Craftsman_Leadership_T3_Uncommon"); // number of man-at-arms in inventory
                     usedCommon = countUsedResource("Crafting_Asset_Craftsman_Leadership_T3_Common") + countUsedResource("Crafting_Asset_Craftsman_Leadership_T2_Common") + countUsedResource("Crafting_Asset_Craftsman_Leadership_T1_Common_1"); //number of used mercenarys, guards and footmans
                 }
-
+				console.debug( "Leadership Assets: %i / %i / %i", T3_Epic, T3_Rare, T3_Uncommon );
+				console.debug( "Used Common Leadership: %i", usedCommon );
+				console.debug( "Checking: %i < %i", T3_Epic + T3_Rare + T3_Uncommon + usedCommon, settings["Leadership" + charcurrent] * 2 );
                 if (!(_enableSmartLeadership) || (_enableSmartLeadership && (T3_Epic + T3_Rare + T3_Uncommon + usedCommon < parseInt(charSettingsList[curCharName].taskListSettings["Leadership"].taskSlots) * 2))) {
                     if (mercenarys.length) {
                         clicked = true;
@@ -2870,6 +2965,7 @@ function addProfile(profession, profile, base){
             for (ic in quality) {
                 $it = $assets.filter(quality[ic]);
                 if ($it.length) {
+                	console.debug( "Added %O Asset to task", $it[0] );
                     $it[0].click();
                     clicked = true;
                     break;
@@ -2881,6 +2977,7 @@ function addProfile(profession, profile, base){
                 for (ic in quality) {
                     $it = $persons.filter(quality[ic]);
                     if ($it.length) {
+	                	console.debug( "Added %s Person to task", $it[0].children[1].textContent );
                         $it[0].click();
                         clicked = true;
                         break;
@@ -2903,6 +3000,7 @@ function addProfile(profession, profile, base){
                 // Get the new set of select buttons created since the other ones are removed when the asset loads
                 var buttonList = $('.taskdetails-assets:eq(1)').find("button");
                 if (i < buttonList.length - 1) {
+                	console.debug( "Job has other optional slots, attempting to fill" );
                     SelectItemFor(buttonList, i + 1, def, prof);
                 } else {
                     // Let main loop continue
@@ -3009,7 +3107,7 @@ function addProfile(profession, profile, base){
                 var exchangeDiamonds = parseInt(unsafeWindow.client.dataModel.model.exchangeaccountdata.readytoclaimescrow);
                 if (exchangeDiamonds > 0) {
                     console.log("AD in exchange: " + exchangeDiamonds);
-                }  
+                }
                 // Domino effect: this new order will post all the gathered diamonds until now
                 var charDiamonds = parseInt(unsafeWindow.client.dataModel.model.ent.main.currencies.diamonds);
                 var ZenRate = parseInt(accountSettings.consolidationSettings.transferRate);
@@ -3028,10 +3126,10 @@ function addProfile(profession, profile, base){
                     console.log("Astral Diamonds on the ZAX:", zaxdiamonds);
                 }
             } else {
-                console.log("Zen Max Listings Reached (5). Skipping ZAX Posting..");
+                console.warn("Zen Max Listings Reached (5). Skipping ZAX Posting..");
             }
         } else {
-            console.log("Zen Exchange data did not load in time for transfer. Skipping ZAX Posting..");
+            console.error("Zen Exchange data did not load in time for transfer. Skipping ZAX Posting..");
         }
     }
 
@@ -3059,7 +3157,7 @@ function addProfile(profession, profile, base){
                 console.log("No listings found on ZAX. Skipping ZAX Withrdaw..");
             }
         } else {
-            console.log("Zen Exchange data did not load in time for transfer. Skipping ZAX Withrdaw..");
+            console.error("Zen Exchange data did not load in time for transfer. Skipping ZAX Withrdaw..");
         }
     }
 
@@ -3160,7 +3258,7 @@ function addProfile(profession, profile, base){
                         };
                         vendor.id = slot.uid;
                         vendor.count = 1;
-                        console.log('Selling', vendor.count, slot.name, 'to vendor.');
+                        console.info('Selling', vendor.count, slot.name, 'to vendor.');
                         window.setTimeout(function() {
                             client.sendCommand('GatewayVendor_SellItemToVendor', vendor);
                         }, _delay);
@@ -3177,7 +3275,8 @@ function addProfile(profession, profile, base){
                 if (slot && _items[i].pattern.test(slot.name) && !slot.bound) {
                     // Node Kits vendor logic for restricted bag space
                     if (getSetting('vendorSettings', 'vendorKitsLimit') && /^Item_Consumable_Skill/.test(slot.name)) {
-                        if (_bagCount < 2 || _bagUnused < 6 ||
+	                    // MBNM: removed bag check which removes limit
+                        if (//_bagCount < 2 || _bagUnused < 6 ||
                             (slot.name == "Item_Consumable_Skill_Dungeoneering" && (_classType == "Player_Guardian" || _classType == "Player_Greatweapon")) ||
                             (slot.name == "Item_Consumable_Skill_Arcana" && (_classType == "Player_Controller" || _classType == "Player_Scourge")) ||
                             (slot.name == "Item_Consumable_Skill_Religion" && _classType == "Player_Devoted") ||
@@ -3194,7 +3293,7 @@ function addProfile(profession, profile, base){
                         };
                         vendor.id = slot.uid;
                         vendor.count = slot.count - _Limit;
-                        console.log('Selling', vendor.count, slot.name, 'to vendor.');
+                        console.info('Selling', vendor.count, slot.name, 'to vendor.');
                         window.setTimeout(function() {
                             client.sendCommand('GatewayVendor_SellItemToVendor', vendor);
                         }, _delay);
@@ -3231,7 +3330,7 @@ function addProfile(profession, profile, base){
                 }
                 chardiamonds[curCharNum] += refined_diamonds
                 console.log("Refining AD for", curCharName + ":", refined_diamonds);
-                console.log(curCharName + "'s", "Astral Diamonds:", chardiamonds[curCharNum]);
+                console.info(curCharName + "'s", "Astral Diamonds:", chardiamonds[curCharNum]);
                 unsafeWindow.client.sendCommand('Gateway_ConvertNumeric', 'Astral_Diamonds');
                 WaitForState("button.closeNotification").done(function() {
                     $("button.closeNotification").click();
@@ -3247,7 +3346,7 @@ function addProfile(profession, profile, base){
             // Check that we dont take money from the character assigned as the banker // Zen Transfer / Listing
             if ((accountSettings.consolidationSettings.bankCharName) && (accountSettings.consolidationSettings.bankCharName !== unsafeWindow.client.dataModel.model.ent.main.name)) {
                 // Check the required min AD amount on character
-                if (getSetting('consolidationSettings','minToTransfer') && 
+                if (getSetting('consolidationSettings','minToTransfer') &&
                         parseInt(unsafeWindow.client.dataModel.model.ent.main.currencies.diamonds) >= (parseInt(getSetting('consolidationSettings','minToTransfer')) + parseInt(getSetting('consolidationSettings','minCharBalance')))) {
                     // Check that the rate is not less than the min & max
                     if (accountSettings.consolidationSettings.transferRate && parseInt(accountSettings.consolidationSettings.transferRate) >= 50 && parseInt(accountSettings.consolidationSettings.transferRate) <= 500) {
@@ -3275,7 +3374,7 @@ function addProfile(profession, profile, base){
                     if (slot && _cRewardPat.test(slot.name)) {
                         if (slot.count >= 99)
                             slot.count = 99;
-                        
+
                         var reserve = getSetting('generalSettings', 'keepOneUnopened') ? 1 : 0;
                         for (i = 1; i <= (slot.count - reserve); i++) {
                             window.setTimeout(function() {
@@ -3372,10 +3471,10 @@ function addProfile(profession, profile, base){
                                 charStatisticsList[curCharName].trackedResources[ri] += slot.count;
                             }
                         }
-                    });                    
+                    });
                 });
         });
-        
+
         // Slot assignment
         unsafeWindow.client.dataModel.model.ent.main.itemassignments.assignments.forEach(function(slot, ix) {
             if (!slot.islockedslot && slot.category !== "None") {
@@ -3441,7 +3540,7 @@ function addProfile(profession, profile, base){
             chardate = null,
             nowdate = new Date();
         nowdate = nowdate.getTime();
-        
+
         var not_active = 0;
         charNamesList.every( function (charName, idx) {
             if (!charSettingsList[charName].general.active) {
@@ -3459,16 +3558,16 @@ function addProfile(profession, profile, base){
                     }
                 }
                 return true;
-            } 
-            
+            }
+
             curCharNum = idx;
             chardelay = delay.SHORT;
             chardate = null;
             console.log("No date found for " + charName + ", switching now.");
-            return false; // = break; 
+            return false; // = break;
         });
         // Change to optional ?
-        if (chardelay > delay.SHORT) chardelay = chardelay + (Math.random() + 0.3) * delay.DEFAULT;  
+        if (chardelay > delay.SHORT) chardelay = chardelay + (Math.random() + 0.3) * delay.DEFAULT;
 
         curCharName = charNamesList[curCharNum];
         curCharFullName = curCharName + "@" + loggedAccount;
@@ -3500,25 +3599,25 @@ function addProfile(profession, profile, base){
         $("#prinfopane").empty();
         var ptext = $("<h3 class='promo-image copy-top prh3'>Professions Robot<br />Next task for " + curCharName + "<br /><span data-timer='" + chardate + "' data-timer-length='2'></span><br />Diamonds: " + curdiamonds.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "<br />Gold: " + curgold + (pleaseBuy.length > 0 ? "<br />" : "") + pleaseBuy.join("<br />") + "</h3>")
             .appendTo("#prinfopane");
-        
+
         if (not_active == charNamesList.length) {
             ptext.append("<div class='h_warning'>No Active chars found!</div>");
             console.warn("No Active chars found!");
         }
-        
+
         GM_setValue("curCharNum_" + loggedAccount, curCharNum);
 
 
-        var runSCAtime = !charStatisticsList[charNamesList[lastCharNum]].general.lastSCAVisit 
+        var runSCAtime = !charStatisticsList[charNamesList[lastCharNum]].general.lastSCAVisit
                       || ((charStatisticsList[charNamesList[lastCharNum]].general.lastSCAVisit + (1000*60*60*24)) < Date.now())
                       || (charStatisticsList[charNamesList[lastCharNum]].general.lastSCAVisit < accountSettings.generalSettings.SCADailyReset)
                       || (charStatisticsList[charNamesList[lastCharNum]].general.lastSCAVisit < lastDailyResetTime.getTime());
-       
-        var sca_setting = getSetting('generalSettings','runSCA'); 
+
+        var sca_setting = getSetting('generalSettings','runSCA');
         var runSCA = (runSCAtime && (sca_setting !== 'never'));
         runSCA = runSCA && (sca_setting === 'always' || (sca_setting === 'free' && chardelay > 7000)); // More than 7 seconds for the next char swap
-        console.log("Check if need to run SCA for " + charNamesList[lastCharNum] + ":  " + sca_setting + " " + runSCAtime);                
-        
+        console.log("Check if need to run SCA for " + charNamesList[lastCharNum] + ":  " + sca_setting + " " + runSCAtime);
+
         if (runSCA) {
             unsafeWindow.location.hash = unsafeWindow.location.hash.replace(/\)\/.+/, ')' + "/adventures");
             processCharSCA(lastCharNum);
@@ -3595,13 +3694,13 @@ function addProfile(profession, profile, base){
 
     function process() {
         waitingNextChar = false;
-    
+
         // Calculating last daily reset time
         var today = new Date();
         var todayRest = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 10,0,0));
         if (today > todayRest) lastDailyResetTime = todayRest;
-        else lastDailyResetTime = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()-1, 10,0,0));  
-        
+        else lastDailyResetTime = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()-1, 10,0,0));
+
         // Make sure the settings button exists
         addSettings();
 
@@ -3643,7 +3742,7 @@ function addProfile(profession, profile, base){
             pleaseBuy.shift();
             pleaseBuy['ts'] = Date.now() + 15*60*1000;
         }
-        
+
         window.setTimeout(function() {
             loginProcess();
         }, delay.SHORT);
@@ -3685,7 +3784,7 @@ function addProfile(profession, profile, base){
         if (accountName) {
             if (!loggedAccount || (loggedAccount != accountName)) {
                 loggedAccount = accountName;
-                console.log("Loading settings for " + accountName);
+                console.info("Loading settings for " + accountName);
 
                 var tempAccountSetting;
                 try {
@@ -3694,7 +3793,7 @@ function addProfile(profession, profile, base){
                     tempAccountSetting = null;
                 }
                 if (!tempAccountSetting) {
-                    console.log('Account settings couldn\'t be retrieved, loading defaults.');
+                    console.error('Account settings couldn\'t be retrieved, loading defaults.');
                     tempAccountSetting = {};
                 };
                 accountSettings = $.extend(true, {}, defaultAccountSettings, tempAccountSetting);
@@ -3704,11 +3803,11 @@ function addProfile(profession, profile, base){
                 client.dataModel.model.loginInfo.choices.forEach(function(char) {
                     if (char.shardname == "Dungeon") return;
                     charNamesList.push(char.name);
-                });                
-                console.log("Found names: " + charNamesList);
+                });
+                console.info("Found names: " + charNamesList);
 
                 charNamesList.forEach(function(charName) {
-                    console.log("Loading settings for " + charName);
+                    console.info("Loading settings for " + charName);
 
                     var tempCharsSetting;
                     try {
@@ -3718,10 +3817,10 @@ function addProfile(profession, profile, base){
                     }
                     if (!tempCharsSetting) {
                         tempCharsSetting = {};
-                        console.log('Character settings couldn\'t be retrieved, loading defaults.');
+                        console.warn('Character settings couldn\'t be retrieved, loading defaults.');
                     };
                     charSettingsList[charName] = $.extend(true, {}, defaultCharSettings, tempCharsSetting);
-                    charSettingsList[charName].charName = charName; // for compatibility 
+                    charSettingsList[charName].charName = charName; // for compatibility
 
                     console.log("Loading saved statistics for " + charName);
                     var tempCharsStatistics;
@@ -3736,18 +3835,18 @@ function addProfile(profession, profile, base){
                     };
                     charStatisticsList[charName] = $.extend(true, {}, defaultCharStatistics, tempCharsStatistics);
                 })
-                
-                
+
+
                 if (scriptSettings.general.saveCharNextTime)
                     charNamesList.forEach( function(name, idx) {
                         chartimers[idx] = (new Date(charStatisticsList[name].general.nextTask));
                         chargold[idx]   = charStatisticsList[name].general.gold;
                         chardiamonds[idx] = charStatisticsList[name].general.diamonds;
                     });
-                
-                
-                
-                
+
+
+
+
                 // Adding the Account and character settings / info to the UI
                 addSettings();
             }
@@ -3853,9 +3952,9 @@ function addProfile(profession, profile, base){
     }
 
     function addSettings() {
-        
+
         var setEventHandlers = false;
-        
+
         if (!($("#settingsButton").length)) {
             // Add the required CSS
             AddCss("\
@@ -3906,7 +4005,7 @@ function addProfile(profession, profile, base){
                 .slt_None {color: red;} .slt_Lead {color: blue;} .slt_Alch {color: green;} .slt_Jewe {color: gold;} .slt_Leat {color: brown;}\
                 #copy_settings_to { width: 200px; height: 350px; margin: 5px 0;} #copy_settings_from { margin: 5px 0;}\
                 ");
-            
+
 
             // Add settings panel to page body
             $("body").append(
@@ -3923,7 +4022,7 @@ function addProfile(profession, profile, base){
                     <div id="info_tabs"><ul></ul></div></div>\
                 <div id="char_settings"></div>\
                 </div>');
-        
+
                 // Add open settings button to page
                 $("body").append('<div id="settingsButton"><span class="ui-icon ui-icon-wrench" title="Click to show preferences" style="cursor: pointer; display: block;"></span></div>');
                 $("#settingsPanel").hide();
@@ -3939,7 +4038,7 @@ function addProfile(profession, profile, base){
             $("#pauseButton").click( function () {
                 PauseSettings();
             });
-            
+
             // Add info pane
             $("body").append("<div id='prinfopane' class='header-newrelease'>");
 
@@ -3956,12 +4055,12 @@ function addProfile(profession, profile, base){
                 $("#pauseButton").show();
                 $("#settingsPanel").hide();
             });
-                
-            
+
+
             //$('#script_settings').html('');
             var tab = addTab("#script_settings", tr('tab.scriptSettings'));
             addInputsUL(tab, 'script', 'main');
-            
+
             tab = addTab("#script_settings", tr('tab.advanced'));
             var thtml = "<button id='reset_settings_btn'>Reset ALL Settings</button><br /><br />";
             thtml += "Must be logged in and at the correct charactar to list it's items.<br />";
@@ -3975,8 +4074,8 @@ function addProfile(profession, profile, base){
                 window.setTimeout(function() {
                     GM_setValue("settings__char__" + c_name + "@" + loggedAccount, JSON.stringify(charSettingsList[c_name]));
                     console.log("Saved char_task setting: " + scope + "." + group + "." + name + "." + sub_name + " For: " + c_name);
-                    
-                    
+
+
                     var keys = GM_listValues();
                     for (i = 0; i < keys.length; i++) {
                         var key = keys[i];
@@ -4001,7 +4100,7 @@ function addProfile(profession, profile, base){
                           resizable: true,
                           width: 500,
                           modal: false,
-                        });        
+                        });
                     return;
                 }
                 var inv_tbl_head = "<table><tr><th>Slot #</th><th>Qty</th><th>Item Name</th><th>Rarity</th><th>Bound</th></tr>";
@@ -4013,7 +4112,7 @@ function addProfile(profession, profile, base){
                     bag.slots.forEach( function (slot, slotNum) {
                         if (!slot) return;
                         slotCnt++;
-                        str += '<tr><td>' + slotNum + 
+                        str += '<tr><td>' + slotNum +
                             '</td><td>' + slot.count + '</td><td class=" rarity_' + slot.rarity + '">' + slot.name +
                             '</td><td>' + slot.rarity + '</td><td>' + (slot.bound || slot.boundtoaccount) +  '</td></tr>';
                     });
@@ -4029,21 +4128,21 @@ function addProfile(profession, profile, base){
                     str += inv_tbl_head;
                     bag.slots.forEach( function (slot, slotNum) {
                         if (!slot) return;
-                        str += '<tr><td>' + slotNum + 
+                        str += '<tr><td>' + slotNum +
                             '</td><td>' + slot.count + '</td><td class=" rarity_' + slot.rarity + '">' + slot.name +
                             '</td><td>' + slot.rarity + '</td><td>' + (slot.bound || slot.boundtoaccount) +  '</td></tr>';
                     });
                     str += '</table><br />';
                 });
-        
-                
-                
+
+
+
                 $('<div id="dialog-inventory" title="Inventory listing">' + str + '</div>').dialog({
                       resizable: true,
                       width: 550,
                       height: 550,
                       modal: false,
-                    });        
+                    });
             });
 
             $('#list_settings_btn').button();
@@ -4054,7 +4153,7 @@ function addProfile(profession, profile, base){
                 tempObj.autoLoginAccount = "";
                 tempObj.autoLoginPassword = "";
                 str += '' +  JSON.stringify(tempObj,null,4) + '\n';
-                
+
                 str += 'Account Settings\n';
                 tempObj = $.extend(true, {}, accountSettings);
                 if (accountSettings.consolidationSettings.bankCharName) {
@@ -4079,7 +4178,7 @@ function addProfile(profession, profile, base){
                       width: 550,
                       height: 750,
                       modal: false,
-                    });        
+                    });
             });
 
             // Custom profiles
@@ -4100,7 +4199,7 @@ function addProfile(profession, profile, base){
             temp_html += '</textarea></div>';
             temp_html += '<div><button id="custom__profiles__import_btn">Import</button></div>';
             temp_html += '<table><tr><th>#</th><th>Task Name</th><th>Base Profile</th><th>Profile Name</th><th><th></tr>';
-            
+
             customProfiles.forEach(function (cProfile, idx) {
                 temp_html += '<tr><td>' + (idx+1) + '</td>';
                 temp_html += '<td>' + cProfile.taskName + '</td>';
@@ -4111,7 +4210,7 @@ function addProfile(profession, profile, base){
             });
             temp_html += '</table>';
             tab.html(temp_html);
-            
+
             $( ".custom_profiles_view" ).button({
                 icons: {
                     primary: "ui-icon-zoomin"
@@ -4119,7 +4218,7 @@ function addProfile(profession, profile, base){
                 text: false
             });
             $( ".custom_profiles_view" ).click( function(e) {
-                var pidx = $(this).val();                    
+                var pidx = $(this).val();
                 var str = "Task name : " + customProfiles[pidx].taskName + "\n";
                     str += "Base Profile : " + customProfiles[pidx].baseProfile + "\n"
                     str += "Profile : \n\n";
@@ -4130,7 +4229,7 @@ function addProfile(profession, profile, base){
                       width: 550,
                       height: 750,
                       modal: false,
-                    });        
+                    });
             });
 
             $( ".custom_profiles_delete" ).button({
@@ -4140,7 +4239,7 @@ function addProfile(profession, profile, base){
                 text: false
             });
             $( ".custom_profiles_delete" ).click( function(e) {
-                var pidx = $(this).val();                    
+                var pidx = $(this).val();
                 customProfiles.splice(pidx,1);
                 GM_setValue("custom_profiles", JSON.stringify(customProfiles));
                 console.log('Deleted custom profile ' + pidx);
@@ -4148,8 +4247,8 @@ function addProfile(profession, profile, base){
                     unsafeWindow.location.href = current_Gateway;
                 }, 0);
             });
-            
-            // Set up the advanced slot selects 
+
+            // Set up the advanced slot selects
             $("#custom_profiles_taskname").change(function(e) {
                 var _taskname = $(this).val();
                 var _profiles = tasklist.filter(function(task) {
@@ -4174,7 +4273,7 @@ function addProfile(profession, profile, base){
             $('#custom__profiles__viewbase_btn').click(function() {
                 var _taskName = $("#custom_profiles_taskname").val();
                 var _baseProfile = $("#custom__profiles__baseprofile").val();
-                
+
                 var _profiles = tasklist.filter(function(task) {
                     return task.taskListName == _taskName;
                 })[0].profiles.filter(function(profile) {
@@ -4187,7 +4286,7 @@ function addProfile(profession, profile, base){
                     width: 550,
                     height: 750,
                     modal: false,
-                });        
+                });
             });
 
 
@@ -4211,7 +4310,7 @@ function addProfile(profession, profile, base){
                     }, 0);
                 }, 0);
             });
-            
+
             //Tracked resources tab
             tab = addTab("#script_settings", tr('tab.trackedResources'));
             var temp_html = 'Insert human readable resource name and NeverWinter gateway internal resource name (from Inventory Listing)';
@@ -4231,10 +4330,10 @@ function addProfile(profession, profile, base){
             trackResources.forEach(function (trRes, idx) {
                 temp_html += '<tr><td>' + (idx+1) + '</td>';
                 temp_html += '<td>' + trRes.fname + '</td>';
-                temp_html += '<td><span class=" ui-icon ' + (trRes.bank ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>'; 
-                temp_html += '<td><span class=" ui-icon ' + (trRes.unbound ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>'; 
-                temp_html += '<td><span class=" ui-icon ' + (trRes.btc ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>'; 
-                temp_html += '<td><span class=" ui-icon ' + (trRes.bta ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>'; 
+                temp_html += '<td><span class=" ui-icon ' + (trRes.bank ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>';
+                temp_html += '<td><span class=" ui-icon ' + (trRes.unbound ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>';
+                temp_html += '<td><span class=" ui-icon ' + (trRes.btc ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>';
+                temp_html += '<td><span class=" ui-icon ' + (trRes.bta ? 'ui-icon-check' : 'ui-icon-close') + '"></span></td>';
                 temp_html += '<td><button class="custom_resources_delete" value=' + idx + '></button></td></tr>';
             });
             temp_html += '</table><br /><button id="custom_resources_reset">Reset to default</button>';
@@ -4267,7 +4366,7 @@ function addProfile(profession, profile, base){
                     unsafeWindow.location.href = current_Gateway;
                 }, 0);
             });
-            
+
             $( "#custom_resources_reset" ).button();
             $( "#custom_resources_reset" ).click( function(e) {
                 if ( !loggedAccount ) {
@@ -4335,7 +4434,7 @@ function addProfile(profession, profile, base){
                 addInputsUL(temp_tab, 'account', key);
             }
             var settings_copy_tab = addTab("#main_tabs", tr('tab.copySettings'));
-            $("div#main_tabs").tabs({ active: false, collapsible: true });                            
+            $("div#main_tabs").tabs({ active: false, collapsible: true });
 
             // Settings copy Tab
             var temp_html = '';
@@ -4349,8 +4448,8 @@ function addProfile(profession, profile, base){
                 temp_html += '<option value="' + charName + '">' + charName + '</option>';
             })
             temp_html += '</select></div><div><button id="copy_settings_button" class="" value="">copy</button></div>';
-            settings_copy_tab.html(temp_html);            
-            
+            settings_copy_tab.html(temp_html);
+
             $( "#copy_settings_button" ).button();
             $( "#copy_settings_button" ).click( function(e) {
                 var _from = $("#copy_settings_from").val();
@@ -4373,27 +4472,27 @@ function addProfile(profession, profile, base){
             //Statisitcs Tabs
             var temp_tab = addTab("#info_tabs", tr('tab.counters'));
             temp_tab.append("<div id='rcounters'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.visits'));
             temp_tab.append("<div id='sca_v'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.workers'));
             temp_tab.append("<div id='worker_overview'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.tools'));
             temp_tab.append("<div id='tools_overview'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.resources'));
             temp_tab.append("<div id='resource_tracker'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.levels'));
             temp_tab.append("<div id='profession_levels'></div>");
-            
+
             temp_tab = addTab("#info_tabs", tr('tab.slots'));
             temp_tab.append("<div id='slot_tracker'></div>");
-            $("#info_tabs").tabs({ active: false, collapsible: true });                
+            $("#info_tabs").tabs({ active: false, collapsible: true });
 
-            
+
             // Adding per char settings UI
             var wrp = $('<div id="charSettingsAccordion">');
             $("#char_settings").append(wrp);
@@ -4402,24 +4501,24 @@ function addProfile(profession, profile, base){
                 var wrp2 = $('<div id="charContainer' + idx + '">');
                 wrp.append(wrp2);
                 addInputsUL(wrp2[0], 'char', 'main_not_tab', charName);
-                
+
                 var char_tabs = $('<div class="charSettingsTabs" id="char_tabs_' + idx + '"><ul></ul></div>');
                 wrp2.append(char_tabs);
-                
+
                 var task_tab = addTab(char_tabs[0], "Tasks");
 
                 // Creating the Tasks custom tab
                 var tableHTML = $('<table><thead><tr><th>Task name</th><th># of slots</th><th>profile</th><th>priority</th><th>stop at lvl</th></tr></thead><tbody>');
-                
+
                 var _slotOptions = [];
-                for (var i = 0; i < 10; i++) 
+                for (var i = 0; i < 10; i++)
                     _slotOptions.push({
                         name: i,
                         value: i
                     });
                 var _priorityOptions = [{name:'high',value:0},{name:'medium',value:1},{name:'low',value:2}];
-                var _stopTaskAtLevelOptions = []; 
-                    _stopTaskAtLevelOptions.push({name: 'none', value: 0}); 
+                var _stopTaskAtLevelOptions = [];
+                    _stopTaskAtLevelOptions.push({name: 'none', value: 0});
                     for (var i = 1; i < 26; i++) _stopTaskAtLevelOptions.push({name: i, value: i});
 
                 tasklist.forEach(function(task) {
@@ -4434,13 +4533,13 @@ function addProfile(profession, profile, base){
                     var _slots = {scope: 'char_task', group: 'taskListSettings', name: task.taskListName, sub_name: 'taskSlots', opts: _slotOptions ,title: task.taskListName, type: 'select', pane: 'tasks1', tooltip: 'Number of slots to assign to ' + task.taskListName};
                     var _profile = {scope: 'char_task', group: 'taskListSettings', name: task.taskListName, sub_name: 'taskProfile', opts: _profileNames ,title: task.taskListName, type: 'select', pane: 'tasks1', tooltip: ''};
                     var _priority = {scope: 'char_task', group: 'taskListSettings', name: task.taskListName, sub_name: 'taskPriority', opts: _priorityOptions ,title: task.taskListName, type: 'select', pane: 'tasks1', tooltip: ''};
-                    var _stop = {scope: 'char_task', group: 'taskListSettings', name: task.taskListName, sub_name: 'stopTaskAtLevel', opts: _stopTaskAtLevelOptions ,title: task.taskListName, type: 'select', pane: 'tasks1', tooltip: ''};                    
+                    var _stop = {scope: 'char_task', group: 'taskListSettings', name: task.taskListName, sub_name: 'stopTaskAtLevel', opts: _stopTaskAtLevelOptions ,title: task.taskListName, type: 'select', pane: 'tasks1', tooltip: ''};
 
                     var _slt = createInput(_slots, charName, 'settingsInput', 'settingsLabel');
                     var _prf = createInput(_profile, charName, 'settingsInput', 'settingsLabel');
                     var _pr = createInput(_priority, charName, 'settingsInput', 'settingsLabel');
                     var _stp = createInput(_stop, charName, 'settingsInput', 'settingsLabel');
-                    
+
                     var tr = $("<tr>");
                     $("<td>").append(_slt.label).appendTo(tr);
                     $("<td>").append(_slt.input).appendTo(tr);
@@ -4451,19 +4550,19 @@ function addProfile(profession, profile, base){
                 });
                 task_tab.append(tableHTML);
 
-                
+
                 // Manual Slots allocation tab
                 var task2_tab = addTab(char_tabs[0], "Manual Tasks");
-                
+
                 var tableHTML2 = $('<table><thead><tr><th>Slot #</th><th>Profession</th><th>Profile</th></tr></thead><tbody>');
 
                 var taskOpts = [];
                 tasklist.forEach(function(task) {
                     if (!task.taskActive) return;
                     taskOpts.push({ name: task.taskListName, value: task.taskListName  });
-                    
+
                 })
-                
+
                 function fillProfile(taskName) {
                     var _profiles = tasklist.filter(function(task) {
                         return task.taskListName == taskName;
@@ -4476,7 +4575,7 @@ function addProfile(profession, profile, base){
                     });
                     return options;
                 }
-                
+
                 // 9 slots
                 for (var j = 0; j < 9; j++) {
                     var _tasks = {scope: 'char_task', group: 'taskListSettingsManual', name: j, sub_name: 'Profession', opts: taskOpts ,title: 'Assign to slot #' +(j+1), type: 'select', pane: 'tasks2', tooltip: '',
@@ -4492,10 +4591,10 @@ function addProfile(profession, profile, base){
                             }
                         };
                     var _tsk = createInput(_tasks, charName, 'settingsInput taskListSettingsManual taskListSettingsManualTask', 'settingsLabel');
-                    
+
                     var _profile = {scope: 'char_task', group: 'taskListSettingsManual', name: j, sub_name: 'Profile', opts: fillProfile($(_tsk.input).val()) ,title: '', type: 'select', pane: 'tasks2', tooltip: ''};
                     var _prf = createInput(_profile, charName, 'settingsInput taskListSettingsManual taskListSettingsManualProfile', 'settingsLabel');
-                    
+
                     var tr = $("<tr>");
                     //$("<td>").append(_slt.label).appendTo(tr);
                     $("<td>").append(_tsk.label).appendTo(tr);
@@ -4517,8 +4616,8 @@ function addProfile(profession, profile, base){
                     var temp_tab = addTab(char_tabs[0], tabs_c[key]);
                     addInputsUL(temp_tab, 'char', key, charName);
                 }
-            }); 
-            
+            });
+
             $("#charSettingsAccordion").accordion({
                 heightStyle: "content",
                 autoHeight: false,
@@ -4527,7 +4626,7 @@ function addProfile(profession, profile, base){
                 collapsible: true,
             });
             $(".charSettingsTabs").tabs();
-  
+
             setEventHandlers = true;
             updateCounters();
         }
@@ -4547,7 +4646,7 @@ function addProfile(profession, profile, base){
                 }, 1000, value);
             });
         }
-        
+
         function saveSetting(elm) {
             var scope = $(elm).data('scope');
             var group = $(elm).data('group');
@@ -4562,7 +4661,7 @@ function addProfile(profession, profile, base){
                 var retval = fun(value, elm);
                 if (retval === false ) return;  // Allowing the onchange function to stop the save
             }
-            
+
             switch (scope) {
                 case 'script':
                     scriptSettings[group][name] = value;
@@ -4584,7 +4683,7 @@ function addProfile(profession, profile, base){
                         setTimeout(function() {
                             $(elm).removeClass("inputSaved");
                         },1500);
-                        
+
                     }, 0);
                     break;
                 case 'char':
@@ -4618,14 +4717,14 @@ function addProfile(profession, profile, base){
                     break;
            }
         }
-        
+
 
         // Helper function to create input elements
         function createInput( settingsItem, charName , input_css_classes, label_css_classes) {
             var input;
             var label;
 
-            var id_name; 
+            var id_name;
             var value;
             switch (settingsItem.scope) {
                 case 'script':
@@ -4645,7 +4744,7 @@ function addProfile(profession, profile, base){
                     value = charSettingsList[charName][settingsItem.group][settingsItem.name][settingsItem.sub_name];
                     break;
 
-            } 
+            }
 
             switch (settingsItem.type) {
                 case 'checkbox':
@@ -4656,7 +4755,7 @@ function addProfile(profession, profile, base){
                 case 'select':
                     input = $("<select name=\"" + id_name + "\" id=\"" + id_name + "\" class=\"" + input_css_classes + "\" >");
                     settingsItem.opts.forEach( function (option) {
-                       input.append($("<option value=\"" + option.value + "\">" + option.name + "</option>")); 
+                       input.append($("<option value=\"" + option.value + "\">" + option.name + "</option>"));
                     });
                     break;
                 case 'void':
@@ -4664,7 +4763,7 @@ function addProfile(profession, profile, base){
                 default:
                     break;
 
-            } 
+            }
             if (settingsItem.type == 'checkbox') input.prop('checked', value);
             else input.val(value);
             input.data('scope', settingsItem.scope);
@@ -4701,7 +4800,7 @@ function addProfile(profession, profile, base){
                         li.append(to_add.label);
                         li.append(to_add.input);
                         break;
-                } 
+                }
                 ul.append(li);
             })
             $(parentSelector).append(ul);
@@ -4717,7 +4816,7 @@ function addProfile(profession, profile, base){
             $(parentSelector).append(tab);
             return tab;
         }
-    
+
         // Close the panel
         /*
         $("#settingsButton").show();
@@ -4728,7 +4827,7 @@ function addProfile(profession, profile, base){
         */
     }
 
-    
+
     function displayPause() {
        if (scriptSettings.general.scriptPaused) {
            $('#pauseButton').html('<span class="ui-icon ui-icon-play" title="Click to resume task script" style="cursor: pointer; display: block;"></span>');
@@ -4737,8 +4836,8 @@ function addProfile(profession, profile, base){
            $('#pauseButton').html('<span class="ui-icon ui-icon-pause" title="Click to pause task script" style="cursor: pointer; display: block;"></span>');
        }
     }
-    
-    
+
+
     function PauseSettings(_action) {
         switch (_action) {
             case true:
@@ -4756,8 +4855,8 @@ function addProfile(profession, profile, base){
         setTimeout(function() {
             //console.log("Pause set to", scriptSettings.general.scriptPaused);
             GM_setValue("settings__script", JSON.stringify(scriptSettings));
-        }, 0);        
-        displayPause();        
+        }, 0);
+        displayPause();
     }
 
 
@@ -4815,7 +4914,7 @@ function addProfile(profession, profile, base){
             charNamesList.forEach(function(charName) {
                 charStatisticsList[charName].general.refineCounter = 0;
                 charStatisticsList[charName].general.refineCounterReset = Date.now();
-                // !! This can couse a freeze on slow computers.                
+                // !! This can couse a freeze on slow computers.
                 GM_setValue("statistics__char__" + charName + "@" + loggedAccount , JSON.stringify(charStatisticsList[charName]));
             });
             updateCounters();
@@ -4966,21 +5065,21 @@ function addProfile(profession, profile, base){
         });
         html += "</table>";
         $('#slot_tracker').html(html);
-        
-        
+
+
         // Visit times and SCA tab
         html = '<table>';
         html += "<tr><th>Character Name</th><th>Next Profession</th><th>Last SCA</th><th>Override</th></tr>";
         charNamesList.forEach(function(charName, idx) {
             html += "<tr>";
             html += "<td>" + charName + "</td>";
-            
+
             if (!chartimers[idx]) html += "<td>No data</td>";
             else    html += "<td><button class=' visitReset ' value=" + (idx + 1) + ">reset</button><span data-timer='" + chartimers[idx] + "' data-timer-length='2'></span></td>";
-            
+
             if (!charStatisticsList[charName].general.lastSCAVisit) html += "<td>No data</td>";
             else html += "<td>" +  (new Date(charStatisticsList[charName].general.lastSCAVisit)).toLocaleString() + "</td>";
-            
+
             if (charSettingsList[charName].general.overrideGlobalSettings) html += "<td><span class='ui-icon  ui-icon-check '></span></td>";
             else html += "<td></td>";
             html += "</tr>";
@@ -4990,7 +5089,7 @@ function addProfile(profession, profile, base){
         html += "<div style='margin: 5px 0;'> Last SCA reset (test #2): " + (new Date(lastDailyResetTime)).toLocaleString() + "</div>";
         $('#sca_v').html(html);
         $('#sca_v').append("<br /><br /><button id='settings_sca'>Cycle SCA</button>");
-        
+
         $('#settings_sca').button();
         $("#settings_sca").click(function() {
             $("#settings_close").trigger("click");
@@ -5001,7 +5100,7 @@ function addProfile(profession, profile, base){
         $('.visitReset').button();
         $(".visitReset").click(function() {
             var value = $(this).val();
-            if (value) { 
+            if (value) {
                 console.log("Reseting for " + charNamesList[value-1]);
                 chartimers[parseInt(value)-1] = null;
                 updateCounters();
@@ -5012,7 +5111,7 @@ function addProfile(profession, profile, base){
                         process();
                     }, delay.SHORT);
                 }
-            } 
+            }
         });
     }
 
@@ -5108,8 +5207,8 @@ function addProfile(profession, profile, base){
                 pattern: /^Potion_Healing(|_[1-5])$/,
                 limit: 0
             };
-        }        
-        
+        }
+
         if (getSetting('vendorSettings', 'vendorJunk')) {
             _vendorItems[_vendorItems.length] = {
                 pattern: /^Item_Snowworks_/,
@@ -5156,14 +5255,14 @@ function addProfile(profession, profile, base){
                 limit: 0
             }; // Unidentified Green Gear
         }
-        
+
         if (getSetting('vendorSettings', 'vendorProfResults')) {
             _vendorItems[_vendorItems.length] = {
                 pattern: /^Crafted_(Jewelcrafting_Waist_Offense_3|Jewelcrafting_Neck_Defense_3|Jewelcrafting_Waist_Defense_3|Med_Armorsmithing_T3_Chain_Armor_Set_1|Med_Armorsmithing_T3_Chain_Pants2|Med_Armorsmithing_T3_Chain_Shirt2|Med_Armorsmithing_T3_Chain_Helm_Set_1|Med_Armorsmithing_T3_Chain_Pants|Med_Armorsmithing_T3_Chain_Boots_Set_1|Hvy_Armorsmithing_T3_Plate_Armor_Set_1|Hvy_Armorsmithing_T3_Plate_Pants2|Hvy_Armorsmithing_T3_Plate_Shirt2|Hvy_Armorsmithing_T3_Plate_Helm_Set_1|Hvy_Armorsmithing_T3_Plate_Boots_Set_1|Leatherworking_T3_Leather_Armor_Set_1|Leatherworking_T3_Leather_Pants2|Leatherworking_T3_Leather_Shirt2|Leatherworking_T3_Leather_Helm_Set_1|Leatherworking_T3_Leather_Boots_Set_1|Tailoring_T3_Cloth_Armor_Set_3|Tailoring_T3_Cloth_Armor_Set_2|Tailoring_T3_Cloth_Armor_Set_1|Tailoring_T3_Cloth_Pants2_Set2|Tailoring_T3_Cloth_Shirt2|Tailoring_T3_Cloth_Helm_Set_1|Artificing_T3_Pactblade_Temptation_5|Artificing_T3_Icon_Virtuous_5|Weaponsmithing_T3_Dagger_4)$/,
                 limit: 0
             };
         }
-        
+
         if (_vendorItems.length > 0) {
             console.log("Attempting to vendor selected items...");
             _sellCount = vendorItemsLimited(_vendorItems);
@@ -5448,4 +5547,3 @@ function toolListDefinition() {
         */
     }
 }
-
