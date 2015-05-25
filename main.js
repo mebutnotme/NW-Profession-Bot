@@ -2092,7 +2092,14 @@ function addProfile(profession, profile, base){
         {scope: 'script', group: 'general', name: 'scriptDebugMode', title: tr('settings.main.debug'), type: 'checkbox', pane: 'main', tooltip: tr('settings.main.debug.tooltip'),
             onchange: function(newValue) {
                 unsafeWindow.console.log('DebugMode set to: ' + newValue);
-                console = newValue ? unsafeWindow.console || fouxConsole : fouxConsole;
+                //console = newValue ? unsafeWindow.console || fouxConsole : fouxConsole;
+				if ( newValue ) {
+					console.log = debug_backup;
+					console.debug = debug_backup;
+				} else {
+					console.log = function() {};
+					console.debug = function() {};
+				}
             }
         },
         {scope: 'script', group: 'general', name: 'autoReload', title: tr('settings.main.autoreload'), type: 'checkbox', pane: 'main', tooltip: tr('settings.main.autoreload.tooltip')},
