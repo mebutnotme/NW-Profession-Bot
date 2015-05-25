@@ -1960,6 +1960,7 @@ function addProfile(profession, profile, base){
             skipPatrolTask: 'AD&Lvl20',
             stopNotLeadership: 0,
             stopAlchemyAt3: false,
+            afterTaskDelay: 0,
         },
         generalSettings: {
             refineAD: true,
@@ -2135,6 +2136,7 @@ function addProfile(profession, profile, base){
         {scope: 'account', group: 'professionSettings', name: 'stopNotLeadership',        type:'select',    pane: 'prof', title: tr('settings.profession.stopNotLeadership'),      tooltip: tr('settings.profession.stopNotLeadership.tooltip'),
             opts:[{name:'never',value:'0'},{name: '20' ,value: 20},{name: '25' ,value: 25}]},
         {scope: 'account', group: 'professionSettings', name: 'stopAlchemyAt3',        type:'checkbox',    pane: 'prof', title: tr('settings.profession.stopAlchemyAt3'),      tooltip: tr('settings.profession.stopAlchemyAt3.tooltip')},
+        {scope: 'account', group: 'professionSettings', name:'afterTaskDelay',   type:'text', pane:'prof', title:'Profession End Delay (sec)', tooltip:'Delay to add to profession end times to allow more tasks ending near the same time to be processed.'},
         {scope: 'account', group: 'vendorSettings', name:'vendorJunk',  type:'checkbox',     pane:'vend',   title:'Auto Vendor junk..',     tooltip:'Vendor all (currently) winterfest fireworks+lanterns'},
         {scope: 'account', group: 'vendorSettings', name:'vendorKitsLimit', type:'checkbox', pane:'vend',   title:'Vendor/Maintain Node Kit Stacks',  tooltip:'Limit skill kits stacks to 50, vendor kits unusable by class, remove all if player has one bag or full bags'},
         {scope: 'account', group: 'vendorSettings', name:'vendorAltarsLimit', type:'checkbox', pane:'vend',   title:'Vendor/Maintain Altar Stacks',  tooltip:'Limit Altars to 80,remove all if player has one bag or full bags'},
@@ -2524,12 +2526,13 @@ function addProfile(profession, profile, base){
                 }
             }
         });
+
         if (next) {
-            console.info("Next finished task at " + next.toLocaleTimeString() + ".  Adding " + settings["profdelay"] + " seconds.");
+            console.info("Next finished task at " + next.toLocaleTimeString() + ".  Adding " + getSetting('professionSettings','afterTaskDelay') + " seconds.");
         } else {
             console.warn("No next finishing date found!!");
         }
-        return new Date( next.getTime() + (parseInt(settings["profdelay"])*1000) );
+        return new Date( next.getTime() + (parseInt(getSetting('professionSettings','afterTaskDelay'))*1000) );
     }
 
     /**
