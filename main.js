@@ -2945,7 +2945,7 @@ function addProfile(profession, profile, base){
                 }
 				console.debug( "Leadership Assets: %i / %i / %i", T3_Epic, T3_Rare, T3_Uncommon );
 				console.debug( "Used Common Leadership: %i", usedCommon );
-				console.debug( "Checking: %i < %i", T3_Epic + T3_Rare + T3_Uncommon + usedCommon, settings["Leadership" + charcurrent] * 2 );
+				console.debug( "Checking: %i < %i", T3_Epic + T3_Rare + T3_Uncommon + usedCommon, parseInt(charSettingsList[curCharName].taskListSettings["Leadership"].taskSlots) * 2 );
                 if (!(_enableSmartLeadership) || (_enableSmartLeadership && (T3_Epic + T3_Rare + T3_Uncommon + usedCommon < parseInt(charSettingsList[curCharName].taskListSettings["Leadership"].taskSlots) * 2))) {
                     if (mercenarys.length) {
                         clicked = true;
